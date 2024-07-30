@@ -132,7 +132,7 @@ float peakHolddB[4] = {-90,-90,-90,-90};    // Peak dB value for texts above pea
 int  peakDrop[4] = {0,0,0,0};                // peak Drop timers
 bool carrierOverlap[5] = {false,false,false,false,false};
 
-int headroom, fmclip, nicamclip;
+int headroom;
 
 int brightness = 20;                        // Initial brightness - need to move it to eeprom?
 
@@ -297,8 +297,6 @@ void setup()
   headroom = int(32768.0F * (pow10(-HEADROOM/20)));                       // Define our headrom to FS of the audio ADC's
   // Serial.print("Headroom ");
   // Serial.println(headroom);
-  fmclip =   1792;                                                        // Define our FM clip level
-  nicamclip = 4096;//1536;                                                // Define our NICAM clip level
 
   tft.init();
   tft.setRotation(3);
