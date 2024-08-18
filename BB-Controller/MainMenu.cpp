@@ -443,7 +443,7 @@ void drawMenuItems(int action) // enum ALL, NEXT, UPDATE, TOGGLE, PREV
       case 4:
         x += mainMenuString((char *)"Nicam: ", 4, x, m_item, carrierOverlap[0]);
         if (MODIFY 1) settings[show_memory].nicam.rf_frequency_khz = rot == 1 ? 6552: 5850;
-        x += mainMenuString(settings[show_memory].nicam.rf_frequency_khz == 5850 ? (char *)"5.580": (char *)"6.552", 4, x, 1);
+        x += mainMenuString(settings[show_memory].nicam.rf_frequency_khz == 5850 ? (char *)"5.850": (char *)"6.552", 4, x, 1);
         settings[show_memory].nicam.bandwidth = settings[show_memory].nicam.rf_frequency_khz == 5850 ?  BW_500 : BW_700;
         if (TOGGLE 2) settings[show_memory].nicam.enable = settings[show_memory].nicam.enable == true ? false : true;
         value = (int) round(20 * log10((float)settings[show_memory].nicam.rf_level/1023.0f));
