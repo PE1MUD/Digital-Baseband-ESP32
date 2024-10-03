@@ -16,11 +16,16 @@ No other libraries that aren't part of the Arduino dev environment have been use
 Note: some settings need to be changed that are part of the TFT_eSPI library!
 Edit User_Setup.h in user\Documents\Arduino\libraries\TFT_eSPI to use the following pins for the display:
 
+In Section 2 find >> For ESP32 Dev board (only tested with ILI9341 display)
+Uncomment these lines and change the pin numbers as follows:
+
 #define TFT_MOSI 23
 #define TFT_SCLK 18
 #define TFT_CS    5  // Chip select control pin
 #define TFT_DC   17  // Data Command control pin
 #define TFT_RST  16  // Reset pin (could connect to RST pin)
+
+Comment all other lines in section 2
 
 The speed needs a change too, so you will have silky smooth PPM Meters.
 For this, select ONLY this line:
@@ -32,6 +37,9 @@ Finally, to stop all the whining about not having a touch screen, uncomment:
 #define DISABLE_ALL_LIBRARY_WARNINGS
 ---------------------------------------------------------------------------------------
 Configuring Arduino for the ESP32 that is in use:
+
+This version needs Espressif esp32 library version 2.0.17.
+The more recent (3.x.x) versions have slight changes in the hardware timer functions and won't work.
 
 Tools->Boards-> (search for) esp32 -> "ESP32 Dev Module" and select this.
 
