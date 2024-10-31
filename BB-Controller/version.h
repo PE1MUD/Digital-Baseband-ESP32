@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------
 //	Version nr
 //
-//  (c) PE1MUD, PE1OBW 2024
+// (c) PE1OBW, PE1MUD
 //--------------------------------------------------------------------
 
 #ifndef VERSION_H_
@@ -11,7 +11,7 @@
 
 #if IS_GOLDEN == 0
 	#define SW_VERSION_MAJOR	1
-	#define SW_VERSION_MINOR	0
+	#define SW_VERSION_MINOR	1
 #else
 	#define SW_VERSION_MAJOR	0
 	#define SW_VERSION_MINOR	0

@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------
-//  Hardware and configuration register maps
+// Hardware and configuration register maps
 //
-//  (c) PE1MUD, PE1OBW 2024
+// (c) PE1OBW, PE1MUD
 //--------------------------------------------------------------------
 
 #ifndef HW_CONTROL_REGISTERS_H_
@@ -67,7 +67,8 @@ typedef struct __attribute__((__packed__)) {
 	uint32_t nicam_control : 4;
 	uint32_t nicam_mode : 2;
 	uint32_t nicam_scramble_init : 9;
-	uint32_t spare2 : 6;
+	uint32_t nicam_invert_spectrum : 1;
+	uint32_t spare2 : 5;
 
 	uint16_t nicam_level;
 	uint16_t reg11b;
@@ -176,6 +177,7 @@ typedef struct __attribute__((__packed__)) {
 	uint32_t generator_ena_ch2 : 1;
 	enum NICAM_BANDWIDTH bandwidth: 1;
 	uint32_t enable : 1;
+	uint32_t invert_spectrum : 1;
 } NICAM_SETTINGS;
 
 typedef struct __attribute__((__packed__)) {

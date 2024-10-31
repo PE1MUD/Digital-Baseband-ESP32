@@ -58,9 +58,9 @@
 //
 //  You're allowed to use all associated sources, but if and when you
 //  modify anything, you are required to disclose your modifications
-//  in a project (branch). This project should be complete in a way 
-//  that it can be compiled. Should you change anything major 
-//  hardware-wise you must provide adequate details on your 
+//  in a project (branch). This project should be complete in a way
+//  that it can be compiled. Should you change anything major
+//  hardware-wise you must provide adequate details on your
 //  modifications in a read.me or by any other appropriate method.
 //
 //  If you find bugs, errors, inconsistencies, please provide feedback
@@ -379,7 +379,7 @@ void setup()
   cp = (char *)&esp32nvm; // Get the char pointer to the esp32nvm struct
 
   // //To reset the eeprom/flash area on the ESP32 - for testing purposes only
-  // for (i=0; i<sizeof(esp32nvm); i++) 
+  // for (i=0; i<sizeof(esp32nvm); i++)
   // {
   //   cp[i] = 255;
   // }
@@ -547,7 +547,7 @@ void setup()
     tft.drawString(tempString, 84, 100, 2);
 
     flashAddress = BASE * 0x10000;
-    for (i=0; i <= (topcnt/BLOCK); i++)
+    for (i=0; i <= (top_size/BLOCK); i++)
     {
       if (!(i % BLOCK))
       {
@@ -616,7 +616,7 @@ void setup()
     Serial.println(preset_status);
   }
 
-  LoadPresetMirror(memory); // Load this preset into the mirror 
+  LoadPresetMirror(memory); // Load this preset into the mirror
 
   // Serial.print("Last recalled memory = ");
   // Serial.println(settings[0].general.last_recalled_presetnr);
@@ -735,7 +735,7 @@ void loop()
         {
           // Serial.println("Browsing items");
           menuTimeout = 10;
-          drawMenuItems(NEXT_ITEM); // next can also be previous; depending on 'rot' [rotary] value 
+          drawMenuItems(NEXT_ITEM); // next can also be previous; depending on 'rot' [rotary] value
           buttonPress = 0;
         }
       if (buttonPress)
@@ -745,10 +745,10 @@ void loop()
         {
           // Serial.println("Changing item");
           menuMode = UPDATE_ITEM;
-          drawMenuItems(UPDATE_ITEM); // next can also be previous; depending on 'rot' [rotary] value 
+          drawMenuItems(UPDATE_ITEM); // next can also be previous; depending on 'rot' [rotary] value
           // buttonPress = 0;
         }
-        else 
+        else
         {
           // (buttonPress && menuMode == UPDATE_ITEM)
           // Serial.println("Back to idle mode");
@@ -876,7 +876,7 @@ void loop()
       if (rot && menuMode == 0)
         {
           menuTimeout = 10;
-          drawConfigMenu(NEXT_ITEM); // next can also be previous; depending on 'rot' [rotary] value 
+          drawConfigMenu(NEXT_ITEM); // next can also be previous; depending on 'rot' [rotary] value
           buttonPress = 0;
         }
 
@@ -924,7 +924,7 @@ void loop()
         {
           // Serial.println("Browsing items");
           menuTimeout = 10;
-          drawTCSMenu(NEXT_ITEM); // next can also be previous; depending on 'rot' [rotary] value 
+          drawTCSMenu(NEXT_ITEM); // next can also be previous; depending on 'rot' [rotary] value
           buttonPress = 0;
         }
       if (buttonPress)
@@ -972,10 +972,10 @@ void loop()
             // Serial.println("Changing item");
             menuTimeout = 10;
             menuMode = UPDATE_ITEM;
-            drawTCSMenu(UPDATE_ITEM); // next can also be previous; depending on 'rot' [rotary] value 
+            drawTCSMenu(UPDATE_ITEM); // next can also be previous; depending on 'rot' [rotary] value
             buttonPress = 0;
           }
-          else 
+          else
           {
             // (buttonPress && menuMode == UPDATE_ITEM)
             // Serial.println("Back to idle mode");
@@ -1000,7 +1000,7 @@ void loop()
       if (rot && menuMode == UPDATE_ITEM)
         {
           menuTimeout = 10;
-          drawTCSMenu(UPDATE_ITEM); // next can also be previous; depending on 'rot' [rotary] value 
+          drawTCSMenu(UPDATE_ITEM); // next can also be previous; depending on 'rot' [rotary] value
           buttonPress = 0;
         }
       rot = 0;
