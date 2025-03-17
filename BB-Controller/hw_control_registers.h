@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------
-//  Hardware and configuration register maps
+// Hardware and configuration register maps
 //
-//  (c) PE1MUD, PE1OBW 2024
+// (c) PE1OBW, PE1MUD
 //--------------------------------------------------------------------
 
 #ifndef HW_CONTROL_REGISTERS_H_
@@ -67,7 +67,8 @@ typedef struct __attribute__((__packed__)) {
 	uint32_t nicam_control : 4;
 	uint32_t nicam_mode : 2;
 	uint32_t nicam_scramble_init : 9;
-	uint32_t spare2 : 6;
+	uint32_t nicam_invert_spectrum : 1;
+	uint32_t spare2 : 5;
 
 	uint16_t nicam_level;
 	uint16_t reg11b;
@@ -86,7 +87,9 @@ typedef struct __attribute__((__packed__)) {
 	uint32_t generator_enable : 1;
 	uint32_t video_filter_bypass : 1;
 	uint32_t video_pattern_enable : 1;
-	uint32_t spare3 : 27;
+	uint32_t peak1_input_i2s_select : 1;
+	uint32_t peak2_input_i2s_select : 1;
+	uint32_t spare3 : 25;
 } HW_SETTINGS;
 
 
@@ -176,6 +179,7 @@ typedef struct __attribute__((__packed__)) {
 	uint32_t generator_ena_ch2 : 1;
 	enum NICAM_BANDWIDTH bandwidth: 1;
 	uint32_t enable : 1;
+	uint32_t invert_spectrum : 1;
 } NICAM_SETTINGS;
 
 typedef struct __attribute__((__packed__)) {
@@ -185,7 +189,8 @@ typedef struct __attribute__((__packed__)) {
 	enum NCO_MODE audio_nco_mode : 2;
 	uint32_t morse_speed : 2;	// 0 = fast, 3 = slow
 	uint32_t morse_message_repeat_time : 10;  // in seconds, max 1023
-	uint32_t spare : 2;
+	uint32_t peak1_input_i2s_select : 1;
+	uint32_t peak2_input_i2s_select : 1;
 	uint32_t last_recalled_presetnr : 8;  // set on preset recall
 	uint32_t user_setting1 : 8;
 } GENERAL_SETTINGS;
