@@ -148,7 +148,9 @@ uint32_t HWRead(uint16_t readaddress, uint8_t* ptr, uint32_t size)
     Wire.write((len+readaddress) / 256);
     Wire.write((len+readaddress) % 256);
     Wire.endTransmission();
-    if (Wire.requestFrom(I2C_ADDRESS/2, (size%126)) == 0) break;
+    // Assumed max safe length of I2C transfer
+    if ((size-len) > 126) Wire.requestFrom(I2C_ADDRESS/2, 126);
+    else Wire.requestFrom(I2C_ADDRESS/2, size-len);
     while(Wire.available())
     {
         *(ptr+len) = Wire.read();                   // receive bytes

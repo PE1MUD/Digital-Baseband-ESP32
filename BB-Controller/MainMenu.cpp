@@ -19,11 +19,11 @@ static const char* const mainMenuItem[20][9] = {  "", "M",  "Baseband metering",
 
 // static const char* const MenuMode[8][3] = { "RUN ", "RUN*", "VIEW"};
 
-int mainMenuItem_Ypos[] = {0, 3, 28, 58, 88, 118, 148, 178, 208};
+int mainMenuItem_Ypos[] = {0, 3, 28, 58, 88, 118, 148, 178, 208, 0, 0};
 
 int frame_x[4]={FRAME_X, FRAME_X + FRAME_D, FRAME_X + 2 * FRAME_D, FRAME_X + 3 * FRAME_D};
 
-int mm_items[9] = {0, 1, 0, 2, 2, 2, 2, 2, 2};
+int mm_items[11] = {0, 1, 0, 2, 2, 2, 2, 2, 2, 1 ,1}; // 9 and 10 are input sources to the ppm meters
 
 int dBticks[9] = {0, 3, 6,  9, 12,  16,  21,  25,  29};
 int dBval[9]   = {6, 3, 0, -3, -6, -10, -20, -40, -60};
@@ -337,25 +337,35 @@ void drawMenuItems(int action) // enum ALL, NEXT, UPDATE, TOGGLE, PREV
     if (mm_items[m_line] < m_item || m_item < 1 || !m_line) // On overflow go to the next line / and set appropriate item
     {
       m_line += rot;
-      if (m_line < 0) m_line = 8; // wrap it around!
+      if (m_line < 0) m_line = 10; // wrap it around!
       if (m_line && !mm_items[m_line]) m_line += rot; // skip lines with no items
-      if (m_line > 8 || m_line < 0) m_line = 0; // Get out of menu
+      if (m_line > 10 || m_line < 0) m_line = 0; // Get out of menu
       m_item = (rot == 1 ? 1 : mm_items[m_line]);
     }
     if (!m_line) menuMode = 0;
     rot = 0;
   }
 
-  for (line = 1; line < 9; line++)
+  for (line = 1; line < 11; line++)
   {
     // if (!((action == UPDATE_ALL || buttonhold == HOLDING) && m_line == line)) continue; // no need to touch this item
-    if (line == m_line) // Highlight this line?
+    if (line<9) // line 9 and 10 are the inputs to the ppm meter, handle them differently
     {
-      if (menuMode) menuItem.fillSprite(0x200); // Color when configuring
-      else  menuItem.fillSprite(0x000B); // Color when browsing items
+      if (line == m_line) // Highlight this line?
+      {
+        if (menuMode) menuItem.fillSprite(0x200); // Color when configuring
+        else  menuItem.fillSprite(0x000B); // Color when browsing items
+      }
+      else
+        menuItem.fillSprite(FILL1);
     }
     else
-      menuItem.fillSprite(FILL1);
+    {
+      if (line == m_line) // Highlight this line?
+        ppmWindow.setTextColor(TFT_WHITE);
+      else
+        ppmWindow.setTextColor(FONT);
+    }
     x = 2;
     switch (line)
     {
@@ -385,24 +395,13 @@ void drawMenuItems(int action) // enum ALL, NEXT, UPDATE, TOGGLE, PREV
           }
           rot = 0;
         }
-        // if the settings changed, longpress will save them!
+        // A longpress loads the original settings from memory
         if (TOGGLE 1)
         {
-          // A longpress on running memory saves the changes
-          if(CheckChange()==true && (preview_memory == memory))
-          {
-            // Serial.println("Saving memory!");
-            SavePreset(memory);
-          }
-          // A longpress on a different memory loads that different memory
-          if (preview_memory != memory)
-          {
-            // Serial.println("Loading memory!");
-            memory = preview_memory;
-            LoadPreset(memory);
-            show_memory = 0;
-            settings[0].general.last_recalled_presetnr = memory;
-          }
+          memory = preview_memory;
+          LoadPreset(memory);
+          show_memory = 0;
+          settings[0].general.last_recalled_presetnr = memory;
         }
         menuItem.setTextColor(TFT_GREEN);
         // settings[0].name[10] = 0; // make sure we have no more than 10 characters
@@ -443,7 +442,11 @@ void drawMenuItems(int action) // enum ALL, NEXT, UPDATE, TOGGLE, PREV
       case 4:
         x += mainMenuString((char *)"Nicam: ", 4, x, m_item, carrierOverlap[0]);
         if (MODIFY 1) settings[show_memory].nicam.rf_frequency_khz = rot == 1 ? 6552: 5850;
-        x += mainMenuString(settings[show_memory].nicam.rf_frequency_khz == 5850 ? (char *)"5.850": (char *)"6.552", 4, x, 1);
+        if (TOGGLE 1) settings[show_memory].nicam.invert_spectrum = settings[show_memory].nicam.invert_spectrum == true ? false:true;
+        if (settings[show_memory].nicam.invert_spectrum == true)
+          x += mainMenuString(settings[show_memory].nicam.rf_frequency_khz == 5850 ? (char *)"5.850i": (char *)"6.552i", 4, x, 1);
+        else
+          x += mainMenuString(settings[show_memory].nicam.rf_frequency_khz == 5850 ? (char *)"5.850": (char *)"6.552", 4, x, 1);
         settings[show_memory].nicam.bandwidth = settings[show_memory].nicam.rf_frequency_khz == 5850 ?  BW_500 : BW_700;
         if (TOGGLE 2) settings[show_memory].nicam.enable = settings[show_memory].nicam.enable == true ? false : true;
         value = (int) round(20 * log10((float)settings[show_memory].nicam.rf_level/1023.0f));
@@ -487,11 +490,43 @@ void drawMenuItems(int action) // enum ALL, NEXT, UPDATE, TOGGLE, PREV
         else sprintf(tempString, "OFF");
         width = mainMenuString(tempString, 2, 200 ,2); // print off-sprite, to find the text width
         mainMenuString(tempString, line, 134 - width , 2);
+      case 9:
+        if (MODIFY 1) 
+        {
+          settings[show_memory].general.peak1_input_i2s_select = settings[show_memory].general.peak1_input_i2s_select == 0 ? 1 : 0;
+          ppmWindow.setTextColor(TFT_GREEN);
+          rot = 0;
+        }
+        if (m_line == line)
+        // Input meter 1
+        {
+          if (menuMode == UPDATE_ITEM) ppmWindow.setTextColor(TFT_GREEN);
+          drawInput(1,1);
+        }
+        else
+        {
+          drawInput(1,0);
+        }
+        break;
+      case 10:
+        if (MODIFY 1)
+        {
+          settings[show_memory].general.peak2_input_i2s_select = settings[show_memory].general.peak2_input_i2s_select == 0 ? 1 : 0;
+          rot = 0;
+        }
+        if (m_line == line)
+        {
+          if (menuMode == UPDATE_ITEM) ppmWindow.setTextColor(TFT_GREEN);
+          drawInput(2,2);
+        }
+        else
+        {
+          drawInput(2,0);
+        }
       default:
         break;
     }
-    menuItem.pushSprite(178, mainMenuItem_Ypos[line]+3);
-   
+    if (line<9) menuItem.pushSprite(178, mainMenuItem_Ypos[line]+3);
     if ((checkOverlap() == true) || (change != CheckChange())) // If the new settings have a difference in overlap, redo the menu with the new colors
     {
       // Serial.println("Some overlap changed!");
@@ -500,7 +535,6 @@ void drawMenuItems(int action) // enum ALL, NEXT, UPDATE, TOGGLE, PREV
       buttonhold++;
       line = 0;
     }
-
   }
   rot = 0;
 }
@@ -521,6 +555,66 @@ void drawMainMenu()
   ppmWindow.pushSprite(174,0);
   drawMenuItems(UPDATE_ALL);
 }
+
+void drawInput(uint8_t meter, uint8_t select)
+{
+  uint16_t x;
+  uint16_t y;
+  int backcolor;
+
+  if (menuMode) backcolor = 0x200;
+  else backcolor = 0x00B;
+
+  // ppmWindow.fillSmoothRoundRect(2,2, 167, 236, 4, FILL1);
+
+
+  if (meter==1) // 1 based so 1 or 2
+   {
+    ppmWindow.fillSmoothRoundRect(FRAME_X - 2              , 5, FRAME_X - 2 + (1* FRAME_W), 21, 4, select == 1 ? backcolor : FILL1);
+    // ppmWindow.fillSmoothRoundRect(FRAME_X - 2              , 5, FRAME_X - 2 + (1* FRAME_W), 21, 4, 0x00B);
+    // ppmWindow.fillSmoothRoundRect(FRAME_X - 2 + 2 * FRAME_D, 5, FRAME_X - 2 + (1* FRAME_W), 21, 4, 0x00B);
+    if (settings[show_memory].general.peak1_input_i2s_select == 0)
+    {
+      ppmWindow.drawString("L-IN1-R", FRAME_X + 3, 9, 2);
+    }
+    else
+    {  
+      ppmWindow.drawString("L-IIS1-R", FRAME_X + 3, 9, 2);
+    }
+    ppmWindow.drawSmoothRoundRect(FRAME_X - 2, 5, 5, 4, FRAME_X - 2 + (1* FRAME_W), 21, 0x7bef, FILL1);
+    ppmWindow.pushSprite(FRAME_X - 1, 5, FRAME_X - 2, 5, FRAME_X - 1 + (1* FRAME_W), 22);
+  }
+  else
+  {
+    ppmWindow.fillSmoothRoundRect(FRAME_X - 2 + 2 * FRAME_D, 5, FRAME_X - 2 + (1* FRAME_W), 21, 4, select == 2 ? backcolor : FILL1);
+    if (settings[show_memory].general.peak2_input_i2s_select == 0)
+    {
+      ppmWindow.drawString("L-IN2-R", FRAME_X + 3 + 2 * FRAME_D, 9, 2);
+    }
+    else
+    {  
+      ppmWindow.drawString("L-IIS2-R", FRAME_X + 3 + 2 * FRAME_D, 9, 2);
+      ppmWindow.setTextColor(FONT);
+    }
+    ppmWindow.drawSmoothRoundRect(FRAME_X - 2 + 2 * FRAME_D, 5, 5, 4, FRAME_X - 2 + (1* FRAME_W), 21, 0x7bef, FILL1);
+    ppmWindow.pushSprite(FRAME_X - 1 + 2 * FRAME_D, 5, FRAME_X - 2 + 2 * FRAME_D, 5, FRAME_X - 1 + (1* FRAME_W), 22);
+  }
+//   if (settings[0].general.peak2_input_i2s_select == 0)
+//   {
+//     ppmWindow.setTextColor(TFT_GREEN);
+//     ppmWindow.drawString("L-IN2-R", FRAME_X + 3 + 2 * FRAME_D, 9, 2);
+//     ppmWindow.setTextColor(FONT);
+//   }
+//   else
+//   {  
+//     ppmWindow.setTextColor(TFT_ORANGE);
+//     ppmWindow.drawString("L-IIS2-R", FRAME_X + 3 + 2 * FRAME_D, 9, 2);
+//     ppmWindow.setTextColor(FONT);
+//   }
+//   ppmWindow.drawSmoothRoundRect(FRAME_X -2 + 2 * FRAME_D, 5, 5, 4, FRAME_X - 2 + (1* FRAME_W), 21, 0x7bef, FILL1);
+
+}
+
 
 void drawMain(void)
 {
@@ -597,13 +691,35 @@ void drawMain(void)
     }
   }
 
-  ppmWindow.drawString("L-IN1-R", FRAME_X + 3, 9, 2);
-  ppmWindow.drawSmoothRoundRect(FRAME_X-2, 5, 5, 4, FRAME_X - 2 + (1* FRAME_W), 21, 0x7bef, FILL1);
+  // if (settings[0].general.peak1_input_i2s_select == 1)
+  //   ppmWindow.drawString("L-IN1-R", FRAME_X + 3, 9, 2);
+  // else
+  // {  
+  //   ppmWindow.setTextColor(TFT_ORANGE);
+  //   ppmWindow.drawString("L-IIS1-R", FRAME_X + 3, 9, 2);
+  //   ppmWindow.setTextColor(FONT);
+  // }
+  // ppmWindow.drawSmoothRoundRect(FRAME_X-2, 5, 5, 4, FRAME_X - 2 + (1* FRAME_W), 21, 0x7bef, FILL1);
 
-  ppmWindow.drawString("L-IN2-R", FRAME_X + 3 + 2 * FRAME_D, 9, 2);
-  ppmWindow.drawSmoothRoundRect(FRAME_X -2 + 2 * FRAME_D, 5, 5, 4, FRAME_X - 2 + (1* FRAME_W), 21, 0x7bef, FILL1);
+  // if (settings[0].general.peak2_input_i2s_select == 0)
+  // {
+  //   ppmWindow.setTextColor(TFT_GREEN);
+  //   ppmWindow.drawString("L-IN2-R", FRAME_X + 3 + 2 * FRAME_D, 9, 2);
+  //   ppmWindow.setTextColor(FONT);
+  // }
+  // else
+  // {  
+  //   ppmWindow.setTextColor(TFT_ORANGE);
+  //   ppmWindow.drawString("L-IIS2-R", FRAME_X + 3 + 2 * FRAME_D, 9, 2);
+  //   ppmWindow.setTextColor(FONT);
+  // }
+  // ppmWindow.drawSmoothRoundRect(FRAME_X -2 + 2 * FRAME_D, 5, 5, 4, FRAME_X - 2 + (1* FRAME_W), 21, 0x7bef, FILL1);
+
 
   ppmWindow.pushSprite(0,0);
+
+  drawInput(1, 0);
+  drawInput(2, 0);
 
   for (i=0; i<4; i++)
     ppmHolder.pushSprite(frame_x[i], FRAME_Y);

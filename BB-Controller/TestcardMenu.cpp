@@ -364,6 +364,7 @@ void drawTCSMenu(int action)
           {
             // Serial.printf("CLearing remainder of OSD 2");
             ClearOSD(0, charPos); // clear remainder of string on longpress
+            eepTimeout = 20;
           }
         }
         if (m_line == 7)
@@ -410,6 +411,7 @@ void drawTCSMenu(int action)
         if (MODIFY 1)
         {
           esp32nvm.osdsettings[0].enable = constrain(esp32nvm.osdsettings[0].enable+rot,0,1);
+          eepTimeout = 20;
           writeUserOSD(-1);
         }
         sprintf(tempString, "Enable OSD1: %s", esp32nvm.osdsettings[0].enable ? "Yes":"No");
@@ -440,6 +442,7 @@ void drawTCSMenu(int action)
           {
             // Serial.printf("CLearing remainder of OSD 2");
             ClearOSD(1, charPos); // clear remainder of string on longpress
+            eepTimeout = 20;
           }
         }
         if (m_line == 10)
@@ -487,6 +490,7 @@ void drawTCSMenu(int action)
         if (MODIFY 1)
         {
           esp32nvm.osdsettings[1].enable = constrain(esp32nvm.osdsettings[1].enable+rot, 0, 1);
+          eepTimeout = 20;
           writeUserOSD(-1);
         }
         sprintf(tempString, "Enable OSD2: %s", esp32nvm.osdsettings[1].enable ? "Yes":"No");

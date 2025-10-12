@@ -34,6 +34,8 @@
 //---------------------------------------------------------------------------------------
 //  Configuring Arduino for the ESP32 that is in use:
 //
+//  This code was built using the esp32 library by Espressif Systems, version 2.0.11.
+//
 //  Tools->Boards-> (search for) esp32 -> "ESP32 Dev Module" and select this.
 //
 //  The settings for this board:
@@ -112,6 +114,7 @@ unsigned long CurrentTime = millis();
 unsigned long ElapsedTime = 0;
 int bessel0 = 0; // Turn off bessel null by default
 int menuMode = 0; // 0 when not in a menu, 1 when in a menu, 2 when in an item in a menu
+int rotation = 3;
 
 // These are used everywhere. Do not move them to the MainMenu.cpp as hopping back and forth will create and destroy them for each update
 // Performance IS an issue here so we want these to be global!
@@ -145,7 +148,7 @@ uint16_t serial = 0;
 char tempString[60];                        // Used in sprintf's
 
 uint8_t testLines[625];
-bool nicmute = 0;
+bool nicmute;
 
 // used to keep track of memory modes and so on
 ESP32NVM esp32nvm;
@@ -160,7 +163,7 @@ uint32_t preset_status;
 
 // FPGA related variables
 HW_INPUTS hw_inputs;
-SETTINGS settings[3];                       // 0 = live 1 = memory 2 = preview
+SETTINGS settings[3];                       // 0 = live, 1 = memory, 2 = preview
 INFO info;
 
 int rotary;
@@ -171,14 +174,12 @@ int screen=BOOT;                            // keeps track of where we are
 int m_line = 0;                             // Menu line #, 0 is none!
 int m_item = 0;                             // Menu item # on a line
 int menu_action = MENU_IDLE;                // Tracks menu navigation changes
-int buttonhold = 0;                         // Used in timer to see if button is held to change screen
+int buttonhold = 0;                         // Used in timer to see if button is held to toggle an item
 int buttonPress = 0;                        // Used to keep track if button is pressed
 
 int charPos = -1;                           // character position of call being edited
 int editString = CHAR_IDLE;                 // Keep track if string is being edited, set to idle. Is handled in config.cpp
 
-int dir = 1;
-float logje=-90.0f;
 bool secondElapsed=false;
 int menuTimeout = 0;;
 int eepTimeout = 0;
@@ -292,14 +293,30 @@ void setup()
 
   Serial.begin(115200);                                                   // Start the UART at a slow 115k2.
 
-  Serial.println("Starting Digital Baseband!");                           // Wake up message
-
   headroom = int(32768.0F * (pow10(-HEADROOM/20)));                       // Define our headrom to FS of the audio ADC's
-  // Serial.print("Headroom ");
-  // Serial.println(headroom);
+  delay(10);
+
+  Serial.println("Reading local eeprom");
+  EEPROM.get(0, esp32nvm);                                                     // Read ESP32's eeprom data
+
+  rotation = esp32nvm.rotation;
+  if (rotation != 1 && rotation != 3) // if not initialized....
+  {
+    rotation = 3; // normal setup
+    esp32nvm.rotation = rotation;
+    eepTimeout = 20;
+  }
+
+  brightness = esp32nvm.brightness;
+  if (brightness < 3  || brightness > 20) // Set default brightness
+  {
+    brightness = 20;
+    esp32nvm.brightness = brightness;
+    eepTimeout = 20;
+  }
 
   tft.init();
-  tft.setRotation(3);
+  tft.setRotation(rotation);
   tft.setSwapBytes(true);
 
   // Create the sprites we need.
@@ -334,6 +351,8 @@ void setup()
 
   delay(1000);                                                            // Wait for the FPGA to complete it's startup sequence
 
+  Serial.println("*** Starting Digital Baseband! ***");                           // Wake up message
+
   WriteM25P80(WRITE_DISABLE, 0, 0, 0);                                    // Make sure the SPI is not in write enable mode (have seen it in that mode, after failed update)
 
   while (sizeof(info) != HWRead(I2C_ACCESS_INFO, (uint8_t *) &info, sizeof(info)))
@@ -346,7 +365,7 @@ void setup()
     while(1);
   }
 
-  // serial = 10005;
+  serial = 0; // For debugging only. Do not change your serial number or you will lose our willingness to help you.
 
   if (serial)
   {
@@ -368,8 +387,6 @@ void setup()
   serial = buffer[0] + 256*buffer[1];
   Serial.print("Serial number: ");
   Serial.println(serial);
-
-  // if ((serial != 10013) && (serial != 10047) && (serial != 10004) && (serial != 10005)) while(1);
 
   WriteM25P80(WRITE_DISABLE, 0, 0, 0);                                         // Make sure the SPI is not in write enable mode (have seen it in that mode, after failed update)
 
@@ -547,7 +564,7 @@ void setup()
     tft.drawString(tempString, 84, 100, 2);
 
     flashAddress = BASE * 0x10000;
-    for (i=0; i <= (topcnt/BLOCK); i++)
+    for (i=0; i <= (top_size/BLOCK); i++)
     {
       if (!(i % BLOCK))
       {
@@ -591,6 +608,7 @@ void setup()
   menu_action = 0;
   buttonhold = 1;
 
+	// Serial.println("Copy running config from board to esp32");
   // Load the last active settings
   while (sizeof(settings[0]) != HWRead(I2C_ACCESS_SETTINGS, (uint8_t *) &settings[0], sizeof(settings[0])))
   {
@@ -603,8 +621,8 @@ void setup()
   }
 
   HWRead(I2C_ACCESS_READ_PRESET_STATUS, (uint8_t *) &preset_status, 4); // load the preset status
-  Serial.print("preset_status = ");
-  Serial.println(preset_status);
+  // Serial.print("preset_status = ");
+  // Serial.println(preset_status);
   memory = settings[0].general.last_recalled_presetnr;
   if (memory == 0) // no memory was read -> 1st run! Store current active settings in memory 1, and recall it
   {
@@ -612,17 +630,16 @@ void setup()
     sprintf(settings[0].name, "DEFAULT");
     memory = 1;
     SavePreset(memory);
-    Serial.print("preset_status = ");
-    Serial.println(preset_status);
+    // Serial.print("preset_status = ");
+    // Serial.println(preset_status);
   }
 
+  // This loads the last memory
   LoadPresetMirror(memory); // Load this preset into the mirror 
-
-  // Serial.print("Last recalled memory = ");
-  // Serial.println(settings[0].general.last_recalled_presetnr);
-
-  // Read the pointers to the misc variables
+  
+  // Read / data
   HWRead(I2C_ACCESS_PATTERN_MEMORY, (uint8_t *) &testLines, sizeof(testLines));
+
   if (esp32nvm.tclsettings.testcard > NUMTESTCARDS) // if outlier value, correct it
   {
     // Serial.println("Testcard init");
@@ -636,7 +653,7 @@ void setup()
   testLines[17] = esp32nvm.tclsettings.vits18_line;
   testLines[22] = esp32nvm.tclsettings.wss_line;
   drawTC(esp32nvm.tclsettings.testcard);
-
+  
   for (i=0;i<2;i++)
   {
     if (esp32nvm.osdsettings[i].x > 40 || esp32nvm.osdsettings[i].y > 16 || esp32nvm.osdsettings[i].x == 0 || esp32nvm.osdsettings[i].y == 0)
@@ -648,16 +665,13 @@ void setup()
       ClearOSD(i, 0);
     }
   }
-
   writeUserOSD(-1);                                     // show the user OSD, as appropriate
-
   EEPROM.put(0, esp32nvm);
   EEPROM.commit();
 
   pinMode(NICAM_MUTE_PIN, INPUT_PULLUP);
 
-  nicmute = NICAMMUTE;
-
+  nicmute = NICAMMUTE ? false:true; // force an update
   checkOverlap();           // Get initial state
   drawMain();
 }
@@ -687,21 +701,19 @@ void loop()
   if (eepTimeout == 1)
   {
     eepTimeout = 0;
-    // Serial.println("Committing esp32nvmn to flash.");
     EEPROM.put(0, esp32nvm);
     EEPROM.commit();
   }
 
   // Added nicam mute option on pin 23 (IO25), ground to mute. Requested by PE1TER.
-  if (NICAMMUTE != nicmute && screen < CONF)
+  if (NICAMMUTE != nicmute)
   {
     nicmute = NICAMMUTE;
     settings[0].nicam.enable = nicmute ? 0: settings[1].nicam.enable;
     HWWrite(I2C_ACCESS_SETTINGS, (uint8_t *) &settings[0], sizeof(settings[0]));
     HWUpdate();
-    // Serial.print("Nicam mute = ");
-    // Serial.println(nicmute ? "OFF" : "ON");
     if (screen == MAIN) drawMenuItems(UPDATE_ALL);
+    if (screen == CONF) drawConfigMenu(UPDATE_ITEM); // Oops,.this one blinks when using UPDATE_ALL - inconsistent. For another time :)
   }
 
   switch (screen)
@@ -709,11 +721,25 @@ void loop()
     case BOOT:
       if (menu_action & UPDATE_ALL)
       {
-        // Serial.println("Drawing splash screen");
         tft.pushImage(0,0,320,240,digibbt);
         menu_action = MENU_IDLE;
       }
-      if (rot) brightness = constrain(brightness+rot, 1 , 20);
+      if (rot)
+      {
+        brightness = constrain(brightness+rot, 2 , 20);
+        esp32nvm.brightness = brightness;
+        eepTimeout = 20;
+
+      }
+      if (buttonhold == HOLDING)
+      {
+        buttonhold++;
+        rotation = rotation == 3 ? 1:3;
+        tft.setRotation(rotation);
+        tft.pushImage(0,0,320,240,digibbt);
+        esp32nvm.rotation = rotation;
+        eepTimeout = 20;
+      }
       rot = 0;
       break;
     case MAIN:
@@ -992,8 +1018,8 @@ void loop()
           // Serial.println("Do a toggle");
           drawTCSMenu(TOGGLE_ITEM);
           buttonhold++;
-          // HWWrite(I2C_ACCESS_SETTINGS, (uint8_t *) &settings[0], sizeof(settings[0]));
-          // HWUpdate();
+          HWWrite(I2C_ACCESS_SETTINGS, (uint8_t *) &settings[0], sizeof(settings[0]));
+          HWUpdate();
           // menu_action = 0;
         }
 

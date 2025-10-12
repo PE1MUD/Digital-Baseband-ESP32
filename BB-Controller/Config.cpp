@@ -116,13 +116,13 @@ void changeString(char* strng, int size, int pos)
   
   // Read char from string
   c = strng[pos];
-  Serial.println((uint8_t)c);
+  // Serial.println((uint8_t)c);
   if (c < 1) c = ' ';
   // Find next char in morseChars array
   while (!found)
   {
     c += rot; // Next char!
-    Serial.println((uint8_t)c);
+    // Serial.println((uint8_t)c);
     // Check for presence in morseChars
     for (i=0;i<sizeof(morseChars)-1;i++)
       if (c == morseChars[i]) // If this is it, we found our next char, skip for loop and exit while loop
@@ -242,8 +242,8 @@ void drawConfigMenu(int action)
 
         if (TOGGLE 1)
         {
-          Serial.println("Running memory");
-          Serial.print("memory_action: ");
+          // Serial.println("Running memory");
+          // Serial.print("memory_action: ");
           // A longpress on running memory saves the changes
           if(CheckChange()==true && (preview_memory == memory))
             SavePreset(memory);
@@ -290,8 +290,8 @@ void drawConfigMenu(int action)
         if ((m_line != 9 && m_line !=1) || m_item != 2) editString = CHAR_IDLE;
         if (MODIFY 2)
         {
-          Serial.print("Editing pos: ");
-          Serial.println(charPos);
+          // Serial.print("Editing pos: ");
+          // Serial.println(charPos);
           if (editString == CHAR_POS || editString == CHAR_MOVED)
           {
             charPos = constrain(charPos+rot, 0, 10);
@@ -311,10 +311,14 @@ void drawConfigMenu(int action)
         }
         configLine.pushSprite(3, y);
 
-
         // Add option to delete the current memory, under conditions
-        if (MODIFY 3 && memory_action == PUPDATE && memory != 1)
-          memory_action = PDELETE;
+        if (MODIFY 3 && memory != 1)
+        {
+            if (memory_action == PUPDATE)
+              memory_action = PDELETE;
+            else
+              memory_action = PUPDATE;
+        }
 
         switch (memory_action)
         {
@@ -344,7 +348,7 @@ void drawConfigMenu(int action)
         {
           if (memory_action == PUPDATE)
           {
-            Serial.println("Updating current memory");
+            // Serial.println("Updating current memory");
             SavePreset(memory);
             y = 2;
             line = 0;
@@ -354,7 +358,7 @@ void drawConfigMenu(int action)
           }
           if (memory_action == PDELETE)
           {
-            Serial.println("Deleting current memory");
+            // Serial.println("Deleting current memory");
             ErasePreset(preview_memory);
             memory = 1;
             preview_memory = 1;
@@ -427,7 +431,12 @@ void drawConfigMenu(int action)
           settings[show_memory].nicam.rf_frequency_khz = value;
           settings[show_memory].nicam.bandwidth = (value == 5850? BW_500: BW_700);
         }
-        sprintf(tempString,"%d.%03dM",value/1000, value%1000);
+        settings[show_memory].nicam.bandwidth = settings[show_memory].nicam.rf_frequency_khz == 5850 ?  BW_500 : BW_700;
+        if (TOGGLE 2) settings[show_memory].nicam.invert_spectrum = settings[show_memory].nicam.invert_spectrum == true ? false:true;
+        if (settings[show_memory].nicam.invert_spectrum == true)
+          sprintf(tempString,"%d.%03diM",value/1000, value%1000);
+        else
+          sprintf(tempString,"%d.%03dM",value/1000, value%1000);
         confString(tempString, line, 5, 2);
         // The BW is frequency dependant, so update it after
         confString((settings[show_memory].nicam.bandwidth == BW_500) ? (char *)"500k": (char *)"700k", line, 3, 0);
@@ -624,7 +633,7 @@ void drawConfigMenu(int action)
           {
             if (bessel0 == 0)
             {
-              if (serial== 10040) tft.pushImage(3,3,314,213,HansPOV);
+              if (serial== 10040 || serial== 10010) tft.pushImage(3,3,314,213,HansPOV);
               else tft.pushImage(3,3,314,213,BESSEL0);
               // Copy live settings into preview area
               memcpy((void *)&settings[2], (void *)&settings[0], sizeof(settings[0]));

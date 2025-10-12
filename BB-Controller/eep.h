@@ -38,6 +38,8 @@ typedef struct {
 	UPDATE update;
 	OSDSETTINGS osdsettings[2];
 	TCLSETTINGS tclsettings;
+  uint8_t rotation;
+  uint8_t brightness;
 } ESP32NVM;
 
 extern ESP32NVM esp32nvm;

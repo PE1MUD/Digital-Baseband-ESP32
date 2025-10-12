@@ -17,6 +17,7 @@
 
 // extern void drawMenuItems(int);
 extern void drawMain();
+extern void drawInput(uint8_t, uint8_t);
 extern void drawMenuItems(int);
 extern void computePPM(int, int);
 extern void drawMeter(int);
