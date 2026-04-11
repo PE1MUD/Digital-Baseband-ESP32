@@ -3,7 +3,7 @@ The Digital Basebands ESP32 source files, version 1.4.
 
 ---------------------------------------------------------------------------------------
 BB-Controller
-(c) PE1MUD, PE1OBW 2024
+(c) PE1MUD, PE1OBW 2024-2026
 ---------------------------------------------------------------------------------------
 For all graphics functions the following library needs to be installed:
 
