@@ -177,6 +177,8 @@ void computePPM(int chnl, int ppm)
   int intval;
   int pixel;
 
+  if (ppm<3) ppm=0;
+
   ref = float(ppm)/float(headroom);
   logval = 20*log10(ref);
 

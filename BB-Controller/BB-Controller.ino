@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------
 //	BB-Controller.ino
 //
-//  (c) PE1MUD, PE1OBW 2024
+//  (c) PE1MUD, PE1OBW 2024/2025
 //---------------------------------------------------------------------------------------
 //  For all graphics functions the following library needs to be installed:
 //
@@ -812,6 +812,15 @@ void loop()
       {
         ppmUpdate = 20; // Do again after 20ms
         HWRead(I2C_ACCESS_READOUT, (uint8_t *) &hw_inputs, sizeof(HW_INPUTS));
+
+        // Serial.print("Input 1 L: ");
+        // Serial.println(hw_inputs.adc1_left_audio_peak);
+        // Serial.print("Input 1 R: ");
+        // Serial.println(hw_inputs.adc1_right_audio_peak);
+        // Serial.print("Input 2 L: ");
+        // Serial.println(hw_inputs.adc2_left_audio_peak);
+        // Serial.print("Input 2 R: ");
+        // Serial.println(hw_inputs.adc2_right_audio_peak);
 
         if (hw_inputs.adc1_left_audio_peak<32769) computePPM(0, hw_inputs.adc1_left_audio_peak);
         if (hw_inputs.adc1_right_audio_peak<32769) computePPM(1, hw_inputs.adc1_right_audio_peak);

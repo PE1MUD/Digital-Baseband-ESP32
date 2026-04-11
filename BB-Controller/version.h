@@ -11,7 +11,7 @@
 
 #if IS_GOLDEN == 0
 	#define SW_VERSION_MAJOR	1
-	#define SW_VERSION_MINOR	3
+	#define SW_VERSION_MINOR	4
 #else
 	#define SW_VERSION_MAJOR	0
 	#define SW_VERSION_MINOR	0

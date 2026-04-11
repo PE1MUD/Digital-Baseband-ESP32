@@ -69,8 +69,8 @@ typedef struct {
 #define I2C_ACCESS_INFO						0x6000		// RO	maps to INFO
 #define I2C_ACCESS_FLASH					0x7000		// R/W	maps to flash SPI interface, see description in file header
 #define I2C_ACCESS_PATTERN_MEMORY			0x8000		// R/W, maps to pattern memory (8192 bytes)
-#define I2C_ACCESS_IO_REGISTERS				0xA000		// R/W,	maps to hardware IO registers
-#define I2C_ACCESS_ROUTING_REGISTERS		0xC000		// WO,  maps to hardware routing register
+#define I2C_ACCESS_IO_REGISTERS				0xA000		// R/W,	maps to hardware IO registers*
+#define I2C_ACCESS_ROUTING_REGISTERS		0xC000		// WO,  maps to hardware routing register**
 
 // Commands. To execute, write a byte (> 0) to the address. To retrieve status, read from this address
 #define I2C_ACCESS_COMMAND_UPDATE_SETTINGS	0x3000		// <1>   	   Update hardware registers (activate settings)
@@ -80,5 +80,16 @@ typedef struct {
 #define I2C_ACCESS_COMMAND_VIEW_PRESET		0x3004		// <preset nr> Read config from preset 1..31 and copy to 'preview' settings
 #define I2C_ACCESS_COMMAND_REBOOT           0x3005		// <1> 		   Reboot FPGA board after 500ms delay
 #define I2C_ACCESS_COMMAND_SET_DEFAULT		0x3006		// <1>         Load defaults
+
+// *  Register map as in struct HW_SETTINGS (write only) or struct HW_INPUTS (read only). 
+//    Note that no atomic 16/32 bit read is possible so please do not use to read the peak levels!
+//
+// ** for every output (nicam L/R, analog 1..4), the following registers are available (write only) :
+//     BASE + 0      d0     output 1 generator enable (0=off, 1=on)
+//     BASE + 0      d1     output 1 mute (1=mute)
+//     BASE + 1  d3..d0     output 1 generator level (0=FS, 1=-6dB, 2=-12dB, ...)
+//     BASE + 2  d2..d0     output 1 input A select
+//     BASE + 3  d2..d0     output 1 input B select
+//    Example: writing 0x02 to BASE + 8 mutes output 3.
 
 #endif /* BASEBAND_I2C_INTERFACE_H_ */
