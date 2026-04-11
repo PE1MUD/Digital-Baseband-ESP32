@@ -1,7 +1,5 @@
 # Digital-Baseband-ESP32
-The Digital Basebands ESP32 source files, version 1.0.
-
-NOTE: a bugfix was made in mainmenu.cpp, but a new release was NOT made.
+The Digital Basebands ESP32 source files, version 1.4.
 
 ---------------------------------------------------------------------------------------
 BB-Controller
